@@ -77,12 +77,28 @@ for more real time & scalable, we can use this approach
 
 - **Language:** Go
 - **Database:** PostgresSQL
-- **Others:** Kafka, Kubernetes, Docker, Redis
 
 ## Installation
 
 1. **Clone the repository:**
-
    ```bash
-   git clone https://github.com/yourusername/your-repo.git ```
+   git clone https://github.com/arizalsaputro/billing-engine.git 
+   ```
+2. **Setup Database:**
+   - check folder /db
+   - setup on your local env or using https://supabase.com/
+   - update the database connection in config in /etc/billing-api.yaml
+3. **Tidy Up:**
+     ```bash 
+    go mod tidy 
+    ```
+4. **Run Local:**
+    ```bash 
+    go run billing.go -f etc/billing-api.yaml 
+    ```
+5. **Check Api Docs:** 
+    - check swagger.json
+    - or import swagger to postman
+
+
    

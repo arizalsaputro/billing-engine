@@ -1,0 +1,42 @@
+Name: billing-api
+Host: 0.0.0.0
+Port: 8888
+Mode: dev
+
+#Middlewares:
+#  Trace: false
+#  Log: false
+#  Prometheus: false
+#  MaxConns: true
+#  Breaker: true
+#  Shedding: true
+#  Timeout: true
+#  Recover: true
+#  Metrics: true
+#  MaxBytes: true
+#  Gunzip: true
+
+#MaxConns: 10000 # jumlah maximum koneksi bersamaan
+#MaxBytes: 1048576
+
+#DevServer:
+#  Enabled: false
+#  Port: 6060
+#  MetricsPath: /metrics
+#  HealthPath: /healthz
+#  EnableMetrics: false
+#  EnablePprof: false
+#  HealthResponse: OK
+
+#Telemetry:
+#  Name: user-api
+#  Endpoint: http://jaeger:14268/api/traces
+#  Sampler: 1.0
+#  Batcher: jaeger
+#  Disabled: false
+
+SettingGracePeriodDay: 3
+SettingInterestPerAnnum: 10
+SettingLateFeePercentage: 0
+
+DataSource: "postgres://localhost:5432/loan_management?sslmode=disable"

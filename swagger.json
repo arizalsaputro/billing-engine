@@ -1,0 +1,712 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "billing API",
+    "description": "simple billing API",
+    "version": ""
+  },
+  "host": "127.0.0.1:8888",
+  "schemes": [
+    "http"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/v1/billing/consume/check/delinquency": {
+      "post": {
+        "operationId": "ConsumeCheckDelinquencyHandler",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/ConsumeCheckDelinquencyResp"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ConsumeCheckDelinquencyReq"
+            }
+          }
+        ],
+        "tags": [
+          "consumer"
+        ]
+      }
+    },
+    "/v1/billing/consume/delinquency": {
+      "post": {
+        "operationId": "ConsumeDelinquencyHandler",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/ConsumeDelinquencyResp"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ConsumeDelinquencyReq"
+            }
+          }
+        ],
+        "tags": [
+          "consumer"
+        ]
+      }
+    },
+    "/v1/billing/consume/late": {
+      "post": {
+        "operationId": "ConsumeLateFeeHandler",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/ConsumeLateFeeResp"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ConsumeLateFeeReq"
+            }
+          }
+        ],
+        "tags": [
+          "consumer"
+        ]
+      }
+    },
+    "/v1/billing/consume/pay": {
+      "post": {
+        "operationId": "ConsumeRepaymentHandler",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/ConsumeRepaymentResp"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ConsumeRepaymentReq"
+            }
+          }
+        ],
+        "tags": [
+          "consumer"
+        ]
+      }
+    },
+    "/v1/billing/create": {
+      "post": {
+        "operationId": "CreateLoanHandler",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/CreateLoanResp"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/CreateLoanReq"
+            }
+          }
+        ],
+        "tags": [
+          "loans"
+        ]
+      }
+    },
+    "/v1/billing/cron/delinquency": {
+      "get": {
+        "operationId": "ScheduleDelinquencyHandler",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/CronDelinquencyResp"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "queryLimit",
+            "in": "query",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "cron"
+        ],
+        "consumes": [
+          "multipart/form-data"
+        ]
+      }
+    },
+    "/v1/billing/cron/late": {
+      "get": {
+        "operationId": "ScheduleLateFeeHandler",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/CronLateFeeResp"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "queryLimit",
+            "in": "query",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "cron"
+        ],
+        "consumes": [
+          "multipart/form-data"
+        ]
+      }
+    },
+    "/v1/billing/delinquency/{loanId}": {
+      "get": {
+        "operationId": "GetLoanDelinquencyHandler",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/GetLoanDelinquencygResp"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "loanId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "loans"
+        ]
+      }
+    },
+    "/v1/billing/outstanding/{loanId}": {
+      "get": {
+        "operationId": "GetLoanOutstandingHandler",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/GetLoanOutStandingResp"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "loanId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "loans"
+        ]
+      }
+    },
+    "/v1/billing/pay/{loanId}": {
+      "post": {
+        "operationId": "CreateRepaymentHandler",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/CreateRepaymentResp"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "loanId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/CreateRepaymentReq"
+            }
+          }
+        ],
+        "tags": [
+          "loans"
+        ]
+      }
+    },
+    "/v1/billing/pay/{paymentId}": {
+      "get": {
+        "operationId": "GetRepaymentHandler",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/GetRepaymentResp"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "paymentId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "loans"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "Base": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "msg": {
+          "type": "string"
+        }
+      },
+      "title": "Base",
+      "required": [
+        "code",
+        "msg"
+      ]
+    },
+    "ConsumeCheckDelinquencyReq": {
+      "type": "object",
+      "properties": {
+        "loanId": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "ConsumeCheckDelinquencyReq",
+      "required": [
+        "loanId"
+      ]
+    },
+    "ConsumeCheckDelinquencyResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "msg": {
+          "type": "string"
+        }
+      },
+      "title": "ConsumeCheckDelinquencyResp"
+    },
+    "ConsumeDelinquencyReq": {
+      "type": "object",
+      "properties": {
+        "loanId": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "ConsumeDelinquencyReq",
+      "required": [
+        "loanId"
+      ]
+    },
+    "ConsumeDelinquencyResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "msg": {
+          "type": "string"
+        }
+      },
+      "title": "ConsumeDelinquencyResp"
+    },
+    "ConsumeLateFeeReq": {
+      "type": "object",
+      "properties": {
+        "scheduleId": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "ConsumeLateFeeReq",
+      "required": [
+        "scheduleId"
+      ]
+    },
+    "ConsumeLateFeeResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "msg": {
+          "type": "string"
+        }
+      },
+      "title": "ConsumeLateFeeResp"
+    },
+    "ConsumeRepaymentReq": {
+      "type": "object",
+      "properties": {
+        "paymentId": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "ConsumeRepaymentReq",
+      "required": [
+        "paymentId"
+      ]
+    },
+    "ConsumeRepaymentResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "msg": {
+          "type": "string"
+        }
+      },
+      "title": "ConsumeRepaymentResp"
+    },
+    "CreateLoanReq": {
+      "type": "object",
+      "properties": {
+        "principalAmount": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "termWeeks": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "CreateLoanReq",
+      "required": [
+        "principalAmount",
+        "termWeeks"
+      ]
+    },
+    "CreateLoanResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "msg": {
+          "type": "string"
+        },
+        "loanId": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "CreateLoanResp",
+      "required": [
+        "loanId"
+      ]
+    },
+    "CreateRepaymentReq": {
+      "type": "object",
+      "properties": {
+        "paymentAmount": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "CreateRepaymentReq",
+      "required": [
+        "paymentAmount"
+      ]
+    },
+    "CreateRepaymentResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "msg": {
+          "type": "string"
+        },
+        "paymentId": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "CreateRepaymentResp",
+      "required": [
+        "paymentId"
+      ]
+    },
+    "CronDelinquencyReq": {
+      "type": "object",
+      "properties": {
+        "queryLimit": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "CronDelinquencyReq",
+      "required": [
+        "queryLimit"
+      ]
+    },
+    "CronDelinquencyResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "msg": {
+          "type": "string"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DataDelinquency"
+          }
+        }
+      },
+      "title": "CronDelinquencyResp",
+      "required": [
+        "data"
+      ]
+    },
+    "CronLateFeeReq": {
+      "type": "object",
+      "properties": {
+        "queryLimit": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "CronLateFeeReq",
+      "required": [
+        "queryLimit"
+      ]
+    },
+    "CronLateFeeResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "msg": {
+          "type": "string"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DataLoanScheduleLate"
+          }
+        }
+      },
+      "title": "CronLateFeeResp",
+      "required": [
+        "data"
+      ]
+    },
+    "DataDelinquency": {
+      "type": "object",
+      "properties": {
+        "loanId": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "DataDelinquency",
+      "required": [
+        "loanId"
+      ]
+    },
+    "DataLoanScheduleLate": {
+      "type": "object",
+      "properties": {
+        "scheduleId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "dueAmount": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "gracePeriodEnd": {
+          "type": "string"
+        }
+      },
+      "title": "DataLoanScheduleLate",
+      "required": [
+        "scheduleId",
+        "dueAmount",
+        "gracePeriodEnd"
+      ]
+    },
+    "GetLoanDelinquencygReq": {
+      "type": "object",
+      "title": "GetLoanDelinquencygReq"
+    },
+    "GetLoanDelinquencygResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "msg": {
+          "type": "string"
+        },
+        "loanId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "isDelinquent": {
+          "type": "boolean",
+          "format": "boolean"
+        }
+      },
+      "title": "GetLoanDelinquencygResp",
+      "required": [
+        "loanId",
+        "isDelinquent"
+      ]
+    },
+    "GetLoanOutStandingResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "msg": {
+          "type": "string"
+        },
+        "loanId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "outstandingBalance": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "GetLoanOutStandingResp",
+      "required": [
+        "loanId",
+        "outstandingBalance"
+      ]
+    },
+    "GetLoanOutstandingReq": {
+      "type": "object",
+      "title": "GetLoanOutstandingReq"
+    },
+    "GetRepaymentReq": {
+      "type": "object",
+      "title": "GetRepaymentReq"
+    },
+    "GetRepaymentResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "msg": {
+          "type": "string"
+        },
+        "paymentId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "paymentAmount": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "paymentDate": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        }
+      },
+      "title": "GetRepaymentResp",
+      "required": [
+        "paymentId",
+        "paymentAmount",
+        "paymentDate",
+        "status"
+      ]
+    }
+  },
+  "securityDefinitions": {
+    "apiKey": {
+      "type": "apiKey",
+      "description": "Enter JWT Bearer token **_only_**",
+      "name": "Authorization",
+      "in": "header"
+    }
+  }
+}

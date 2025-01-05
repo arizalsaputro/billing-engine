@@ -1,0 +1,164 @@
+syntax = "v1"
+
+info (
+	title:  "billing API"
+	desc:   "simple billing API"
+	author: "Arizal"
+	email:  "muhammadarizals1@gmail.com"
+)
+
+type Base {
+	Code int    `json:"code"`
+	Msg  string `json:"msg"`
+}
+
+type (
+	CreateLoanReq {
+		PrincipalAmount int64 `json:"principalAmount"`
+		TermWeeks       int64 `json:"termWeeks"`
+	}
+	CreateLoanResp {
+		Base
+		LoanID int64 `json:"loanId"`
+	}
+	GetLoanOutstandingReq {
+		LoanID int64 `path:"loanId"`
+	}
+	GetLoanOutStandingResp {
+		Base
+		LoanID             int64 `json:"loanId"`
+		OutstandingBalance int64 `json:"outstandingBalance"`
+	}
+	GetLoanDelinquencygReq {
+		LoanID int64 `path:"loanId"`
+	}
+	GetLoanDelinquencygResp {
+		Base
+		LoanID       int64  `json:"loanId"`
+		IsDelinquent bool `json:"isDelinquent"`
+	}
+	CreateRepaymentReq {
+		LoanID        int64 `path:"loanId"`
+		PaymentAmount int64 `json:"paymentAmount"`
+	}
+	CreateRepaymentResp {
+		Base
+		PaymentID int64 `json:"paymentId"`
+	}
+	GetRepaymentReq {
+		PaymentID int64 `path:"paymentId"`
+	}
+	GetRepaymentResp {
+		Base
+		PaymentID     int64    `json:"paymentId"`
+		PaymentAmount int64    `json:"paymentAmount"`
+		PaymentDate   string `json:"paymentDate"`
+		Status        string `json:"status"`
+	}
+)
+
+// simulate cron service, suppose to create new service, but for simplicity just use this API
+type (
+	CronLateFeeReq {
+		QueryLimit int `form:"queryLimit"`
+	}
+	DataLoanScheduleLate {
+		ScheduleID     int    `json:"scheduleId"`
+		DueAmount      int    `json:"dueAmount"`
+		GracePeriodEnd string `json:"gracePeriodEnd"`
+	}
+	CronLateFeeResp {
+		Base
+		Data []*DataLoanScheduleLate `json:"data"`
+	}
+	CronDelinquencyReq {
+		QueryLimit int `form:"queryLimit"`
+	}
+	DataDelinquency {
+		LoanID int64 `json:"loanId"`
+	}
+	CronDelinquencyResp {
+		Base
+		Data []*DataDelinquency `json:"data"`
+	}
+)
+
+// simulate consumer service, suppose to create new service that consume kafka, but for simplicity just use API
+type (
+	ConsumeLateFeeReq {
+		ScheduleID int64 `json:"scheduleId"`
+	}
+	ConsumeLateFeeResp {
+		Base
+	}
+	ConsumeDelinquencyReq {
+		LoanID int64 `json:"loanId"`
+	}
+	ConsumeDelinquencyResp {
+		Base
+	}
+	ConsumeRepaymentReq {
+		PaymentID int64 `json:"paymentId"`
+	}
+	ConsumeRepaymentResp {
+		Base
+	}
+	ConsumeCheckDelinquencyReq {
+		LoanID int64 `json:"loanId"`
+	}
+	ConsumeCheckDelinquencyResp {
+		Base
+	}
+)
+
+@server (
+	prefix: /v1
+	group:  loans
+)
+service billing-api {
+	@handler CreateLoanHandler
+	post /billing/create (CreateLoanReq) returns (CreateLoanResp)
+
+	@handler GetLoanOutstandingHandler
+	get /billing/outstanding/:loanId (GetLoanOutstandingReq) returns (GetLoanOutStandingResp)
+
+	@handler GetLoanDelinquencyHandler
+	get /billing/delinquency/:loanId (GetLoanDelinquencygReq) returns (GetLoanDelinquencygResp)
+
+	@handler CreateRepaymentHandler
+	post /billing/pay/:loanId (CreateRepaymentReq) returns (CreateRepaymentResp)
+
+	@handler GetRepaymentHandler
+	get /billing/pay/:paymentId (GetRepaymentReq) returns (GetRepaymentResp)
+}
+
+@server (
+	prefix: /v1
+	group:  cron
+)
+service billing-api {
+	@handler ScheduleLateFeeHandler
+	get /billing/cron/late (CronLateFeeReq) returns (CronLateFeeResp)
+
+	@handler ScheduleDelinquencyHandler
+	get /billing/cron/delinquency (CronDelinquencyReq) returns (CronDelinquencyResp)
+}
+
+@server (
+	prefix: /v1
+	group:  consumer
+)
+service billing-api {
+	@handler ConsumeLateFeeHandler
+	post /billing/consume/late (ConsumeLateFeeReq) returns (ConsumeLateFeeResp)
+
+	@handler ConsumeDelinquencyHandler
+	post /billing/consume/delinquency (ConsumeDelinquencyReq) returns (ConsumeDelinquencyResp)
+
+	@handler ConsumeRepaymentHandler
+	post /billing/consume/pay (ConsumeRepaymentReq) returns (ConsumeRepaymentResp)
+
+	@handler ConsumeCheckDelinquencyHandler
+	post /billing/consume/check/delinquency (ConsumeCheckDelinquencyReq) returns (ConsumeCheckDelinquencyResp)
+}
+
