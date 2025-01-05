@@ -382,14 +382,14 @@
     "ConsumeLateFeeReq": {
       "type": "object",
       "properties": {
-        "scheduleId": {
+        "loanId": {
           "type": "integer",
           "format": "int64"
         }
       },
       "title": "ConsumeLateFeeReq",
       "required": [
-        "scheduleId"
+        "loanId"
       ]
     },
     "ConsumeLateFeeResp": {

@@ -39,7 +39,7 @@ func (l *ScheduleDelinquencyLogic) ScheduleDelinquency(req *types.CronDelinquenc
 
 	for _, loan := range loans {
 		resp.Data = append(resp.Data, &types.DataDelinquency{
-			LoanID: loan.LoanId,
+			LoanID: loan.LoanID,
 		})
 	}
 

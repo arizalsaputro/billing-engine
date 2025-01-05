@@ -1,8 +1,6 @@
 package loans
 
 import (
-	"errors"
-	"github.com/arizalsaputro/billing-engine/internal/model"
 	"net/http"
 
 	"github.com/arizalsaputro/billing-engine/internal/logic/loans"
@@ -25,14 +23,6 @@ func CreateRepaymentHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 		l := loans.NewCreateRepaymentLogic(r.Context(), svcCtx)
 		resp, err := l.CreateRepayment(&req)
 		if err != nil {
-			if errors.Is(err, model.ErrNotFound) {
-				httpx.WriteJsonCtx(r.Context(), w, http.StatusBadRequest, &types.Base{
-					Code: http.StatusBadRequest,
-					Msg:  "Loan not found",
-				})
-				return
-			}
-
 			httpx.WriteJsonCtx(r.Context(), w, http.StatusBadRequest, &types.Base{
 				Code: http.StatusBadRequest,
 				Msg:  err.Error(),

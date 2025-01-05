@@ -15,6 +15,10 @@ Simple code solution for billing engine
     - [Update Delinquency Status](#update-delinquency-status)
     - [Update Delinquency Status with KS](#another-approach-update-delinquency-status)
 - [Installation](#installation)
+- [Simulate Feature](#simulate-feature-)
+  - [Cron Late Fee](#step-to-simulate-cron-late-fee-calculation)
+  - [Cron Delinquency](#step-to-simulate-cron-delinquency)
+  - [Payment](#step-to-simulate-payment)
 
 ## Introduction
 
@@ -105,5 +109,30 @@ for more real time & scalable, we can use this approach
     - check swagger.json
     - or import swagger to postman
 
+## Simulate Feature 
+- FYI the late fee model used in this code is once late fee, not daily interest late fee
+- for simplicity will simulate the design using api, meaning you have to hit API manually
+- `/v1/billing/cron` is for simulate cron
+- `/v1/billing/consume` is for simulate consumer of message broker
+
+### Step to simulate Cron Late Fee Calculation
+1. create loan by api `/v1/billing/create`
+2. try get outstanding using `v1/billing/outstanding/{loanId}`
+3. manual update/patch column `due date` in table `loan_schema.repaymentschedules`, make behind current date
+4. then hit api `/v1/billing/cron/late` 
+5. then hit api `/v1/billing/consume/late` to simulate kafka customer 
+6. then try hit again `v1/billing/outstanding/{loanId}` to see outstanding change
+
+### Step to simulate Cron Delinquency
+1. similar to simulate late fee but make sure to create 2 or more miss payment
+2. try hit `/v1/billing/cron/delinquency` to get list loan delinquency
+3. hit api `/v1/billing/consume/delinquency` to simulate
+4. then try `/v1/billing/delinquency/:loanId` 
+
+### Step to simulate Payment
+1. try simulate cron late fist
+2. hit `v1/billing/pay/:loanId` to attemps payment
+3. hit `v1/billing/consume/pay` to simulate payment behind the scene
+4. hit `v1/billing/outstanding/{loanId}` to check outstanding
 
    

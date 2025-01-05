@@ -13,7 +13,7 @@ import (
 
 func GetLoanDelinquencyHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req types.GetLoanDelinquencygReq
+		var req types.GetLoanDelinquencyReq
 		if err := httpx.Parse(r, &req); err != nil {
 			httpx.WriteJsonCtx(r.Context(), w, http.StatusBadRequest, &types.Base{
 				Code: http.StatusBadRequest,

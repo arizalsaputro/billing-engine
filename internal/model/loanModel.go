@@ -19,10 +19,10 @@ type (
 		GetRepaymentSchedules(ctx context.Context, loanID int64) ([]PaymentSchedule, error)
 		UpsertPaymentWithID(ctx context.Context, payment Payment) (int64, error)
 		ProcessRepayment(ctx context.Context, paymentID int64) (loanID int64, err error)
-		GetDelinquentLoans(ctx context.Context, limit int) ([]Loans, error)
+		GetDelinquentLoans(ctx context.Context, limit int) ([]SimplePaymentSchedule, error)
 		RecheckLoanDelinquency(ctx context.Context, loanID int64) (int64, error)
 		UpdateLoanDelinquency(ctx context.Context, loanID int64, isDelinquent bool) error
-		GetLateRepaymentSchedules(ctx context.Context, limit int) ([]PaymentSchedule, error)
+		GetLateRepaymentSchedules(ctx context.Context, limit int) ([]SimplePaymentSchedule, error)
 		ApplyLateFees(ctx context.Context, loanID int64) error
 	}
 
@@ -31,7 +31,6 @@ type (
 		PrincipalAmount    decimal.Decimal `db:"principal_amount"`
 		InterestRate       decimal.Decimal `db:"interest_rate"`
 		TermWeeks          int64           `db:"term_weeks"`
-		WeeklyPayment      decimal.Decimal `db:"weekly_payment"`
 		OutstandingBalance decimal.Decimal `db:"outstanding_balance"`
 		Delinquent         bool            `db:"delinquent"`
 		LateFeePercentage  decimal.Decimal `db:"late_fee_percentage"`
@@ -54,6 +53,10 @@ type (
 		GracePeriodEnd  sql.NullTime    `db:"grace_period_end"`  // Generated always as (due_date + grace_period_days)
 		CreatedAt       time.Time       `db:"created_at"`        // Timestamp with default CURRENT_TIMESTAMP
 		UpdatedAt       time.Time       `db:"updated_at"`        // Timestamp with default CURRENT_TIMESTAMP
+	}
+
+	SimplePaymentSchedule struct {
+		LoanID int64 `db:"loan_id"`
 	}
 
 	Payment struct {
@@ -79,8 +82,8 @@ func (m *loansModel) CreateLoan(ctx context.Context, loan *Loans, schedules []*P
 	err := m.conn.TransactCtx(ctx, func(ctx context.Context, session sqlx.Session) error {
 		// Step 1: Insert Loan
 		insertLoanQuery := `
-			INSERT INTO loan_schema.loans (principal_amount, interest_rate, term_weeks, weekly_payment, outstanding_balance, late_fee_percentage, grace_period_days)
-			VALUES ($1, $2, $3, $4, $5, $6, $7)
+			INSERT INTO loan_schema.loans (principal_amount, interest_rate, term_weeks, outstanding_balance, late_fee_percentage, grace_period_days)
+			VALUES ($1, $2, $3, $4, $5, $6)
 			RETURNING loan_id
 		`
 
@@ -89,7 +92,6 @@ func (m *loansModel) CreateLoan(ctx context.Context, loan *Loans, schedules []*P
 			loan.PrincipalAmount.StringFixed(2),
 			loan.InterestRate.StringFixed(2),
 			loan.TermWeeks,
-			loan.WeeklyPayment.StringFixed(2),
 			loan.OutstandingBalance.StringFixed(2),
 			loan.LateFeePercentage.StringFixed(2),
 			loan.GracePeriodDays,
@@ -124,7 +126,7 @@ func (m *loansModel) CreateLoan(ctx context.Context, loan *Loans, schedules []*P
 func (m *loansModel) GetLoanByID(ctx context.Context, loanID int64) (*Loans, error) {
 	var loan Loans
 	query := `
-		SELECT loan_id, principal_amount, interest_rate, term_weeks, weekly_payment,
+		SELECT loan_id, principal_amount, interest_rate, term_weeks,
 		       outstanding_balance, delinquent, late_fee_percentage, grace_period_days,
 		       created_at, updated_at
 		FROM loan_schema.loans
@@ -182,9 +184,9 @@ func (m *loansModel) UpsertPaymentWithID(ctx context.Context, payment Payment) (
 	`
 
 	err := m.conn.QueryRowCtx(ctx, &paymentID,
-		query, payment.LoanID, payment.WeekNumber, payment.PaymentAmount.StringFixed(2), payment.PaymentDate, payment.Status)
-	if err != nil {
-		return 0, err
+		query, payment.LoanID, payment.WeekNumber, payment.PaymentAmount.StringFixed(2), payment.Status)
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		return 0, fmt.Errorf("upsertPaymentWithID Step 1: %w", err)
 	}
 
 	// If no row was inserted and no `payment_id` is returned, fetch the existing `payment_id`
@@ -196,7 +198,7 @@ func (m *loansModel) UpsertPaymentWithID(ctx context.Context, payment Payment) (
 		`
 		err = m.conn.QueryRowCtx(ctx, &paymentID, existingQuery, payment.LoanID, payment.WeekNumber)
 		if err != nil {
-			return 0, err
+			return 0, fmt.Errorf("upsertPaymentWithID Step 2: %w", err)
 		}
 	}
 
@@ -210,25 +212,25 @@ func (m *loansModel) ProcessRepayment(ctx context.Context, paymentID int64) (loa
 		// Step 1. Select and Lock the table payment
 		var payment Payment
 		query := `
-			SELECT loan_id, payment_amount, status, week_number
+			SELECT payment_id, loan_id, payment_amount, payment_date, status, week_number
 			FROM loan_schema.payments
 			WHERE payment_id = $1
 			FOR UPDATE
 		`
-		err := m.conn.QueryRowCtx(ctx, &payment, query, paymentID)
+		err := session.QueryRowCtx(ctx, &payment, query, paymentID)
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
 				return ErrPaymentNotFound
 			}
-			return fmt.Errorf("failed to fetch payment: %w", err)
+			return fmt.Errorf("step 1: failed to fetch payment: %w", err)
 		}
+
+		loanID = payment.LoanID
 
 		// Check idempotency
 		if payment.Status != StatusPaymentPending {
 			return nil // Already processed or in a non-pending state, exit early
 		}
-
-		loanID = payment.LoanID
 
 		// Step 2: Update Repayment Schedule
 		updateScheduleQuery := `
@@ -236,9 +238,9 @@ func (m *loansModel) ProcessRepayment(ctx context.Context, paymentID int64) (loa
 			SET paid = TRUE, payment_date = CURRENT_DATE
 			WHERE loan_id = $1 AND week_number = $2 AND paid = FALSE
 		`
-		_, err = m.conn.ExecCtx(ctx, updateScheduleQuery, payment.LoanID, payment.WeekNumber)
+		_, err = session.ExecCtx(ctx, updateScheduleQuery, payment.LoanID, payment.WeekNumber)
 		if err != nil {
-			return fmt.Errorf("failed to update repayment schedule: %w", err)
+			return fmt.Errorf("step 2: failed to update repayment schedule: %w", err)
 		}
 
 		// Step 3: Update Loan Outstanding Balance; atomic update
@@ -247,9 +249,9 @@ func (m *loansModel) ProcessRepayment(ctx context.Context, paymentID int64) (loa
 			SET outstanding_balance = outstanding_balance - $1
 			WHERE loan_id = $2
 		`
-		_, err = m.conn.ExecCtx(ctx, updateLoanQuery, payment.PaymentAmount.StringFixed(2), payment.LoanID)
+		_, err = session.ExecCtx(ctx, updateLoanQuery, payment.PaymentAmount.StringFixed(2), payment.LoanID)
 		if err != nil {
-			return fmt.Errorf("failed to update loan balance: %w", err)
+			return fmt.Errorf("step 3: failed to update loan balance: %w", err)
 		}
 
 		// Step 4: Mark Payment as Success
@@ -258,9 +260,9 @@ func (m *loansModel) ProcessRepayment(ctx context.Context, paymentID int64) (loa
 			SET status = 'success'
 			WHERE payment_id = $1
 		`
-		_, err = m.conn.ExecCtx(ctx, updatePaymentQuery, paymentID)
+		_, err = session.ExecCtx(ctx, updatePaymentQuery, paymentID)
 		if err != nil {
-			return fmt.Errorf("failed to update payment status: %w", err)
+			return fmt.Errorf("step 4: failed to update payment status: %w", err)
 		}
 
 		return nil
@@ -269,8 +271,8 @@ func (m *loansModel) ProcessRepayment(ctx context.Context, paymentID int64) (loa
 	return loanID, err
 }
 
-func (m *loansModel) GetDelinquentLoans(ctx context.Context, limit int) ([]Loans, error) {
-	var loans []Loans
+func (m *loansModel) GetDelinquentLoans(ctx context.Context, limit int) ([]SimplePaymentSchedule, error) {
+	var loans []SimplePaymentSchedule
 
 	query := `
 		SELECT loan_id
@@ -324,8 +326,8 @@ func (m *loansModel) UpdateLoanDelinquency(ctx context.Context, loanID int64, is
 	return nil
 }
 
-func (m *loansModel) GetLateRepaymentSchedules(ctx context.Context, limit int) ([]PaymentSchedule, error) {
-	var schedules []PaymentSchedule
+func (m *loansModel) GetLateRepaymentSchedules(ctx context.Context, limit int) ([]SimplePaymentSchedule, error) {
+	var schedules []SimplePaymentSchedule
 
 	query := `
 		SELECT DISTINCT loan_id
@@ -348,24 +350,30 @@ func (m *loansModel) GetLateRepaymentSchedules(ctx context.Context, limit int) (
 func (m *loansModel) ApplyLateFees(ctx context.Context, loanID int64) error {
 	err := m.conn.TransactCtx(ctx, func(ctx context.Context, session sqlx.Session) error {
 		// Step 1: Update repayment schedules and fetch late fees
-		var lateFees []decimal.Decimal
-
 		updateQuery := `
 		UPDATE loan_schema.paymentschedules
 		SET late_fee_applied = TRUE, 
-		    late_fee_amount = GREATEST(due_amount * (SELECT late_fee_percentage / 100 FROM loan_schema.loans WHERE loan_id = $1), 0)
-		WHERE loan_id = $1 AND grace_period_end < CURRENT_DATE AND paid = FALSE AND late_fee_applied = FALSE
+			late_fee_amount = CEIL(GREATEST(due_amount * (SELECT late_fee_percentage / 100 FROM loan_schema.loans WHERE loan_id = $1), 0))
+		WHERE loan_id = $1 
+		  AND grace_period_end < CURRENT_DATE 
+		  AND paid = FALSE 
+		  AND late_fee_applied = FALSE
 		RETURNING late_fee_amount
 		`
 
-		err := session.QueryRowCtx(ctx, &lateFees, updateQuery, loanID)
+		// Temporary slice to hold results
+		var results []struct {
+			LateFee decimal.Decimal `db:"late_fee_amount"`
+		}
+
+		err := session.QueryRowsCtx(ctx, &results, updateQuery, loanID)
 		if err != nil {
 			return fmt.Errorf("failed to apply late fees: %w", err)
 		}
 
 		var totalLateFees decimal.Decimal
-		for _, fee := range lateFees {
-			totalLateFees.Add(fee)
+		for _, fee := range results {
+			totalLateFees = totalLateFees.Add(fee.LateFee)
 		}
 
 		// If no late fees were applied, skip further updates

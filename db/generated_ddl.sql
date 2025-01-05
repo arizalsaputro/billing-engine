@@ -1,22 +1,20 @@
-create database loan_management
+-- create database loan_management
+--     with owner arizal;
 
 create table loan_schema.loans
 (
     loan_id             serial
         primary key,
-    principal_amount    numeric(15, 2)                          not null
+    principal_amount    numeric(15, 2)                      not null
         constraint chk_principal_amount_positive
             check (principal_amount > (0)::numeric),
     interest_rate       numeric(5, 2)            default 10 not null
         constraint chk_interest_rate_positive
             check (interest_rate >= (0)::numeric),
-    term_weeks          integer                                 not null
+    term_weeks          integer                             not null
         constraint chk_term_weeks_positive
             check (term_weeks > 0),
-    weekly_payment      numeric(15, 2)                          not null
-        constraint chk_weekly_payment_positive
-            check (weekly_payment > (0)::numeric),
-    outstanding_balance numeric(15, 2)                          not null
+    outstanding_balance numeric(15, 2)                      not null
         constraint chk_outstanding_balance_non_negative
             check (outstanding_balance >= (0)::numeric),
     delinquent          boolean                  default false,
@@ -27,6 +25,8 @@ create table loan_schema.loans
     updated_at          timestamp with time zone default CURRENT_TIMESTAMP
 );
 
+-- alter table loan_schema.loans
+--     owner to arizal;
 
 create table loan_schema.paymentschedules
 (
@@ -55,6 +55,9 @@ create table loan_schema.paymentschedules
     updated_at        timestamp with time zone default CURRENT_TIMESTAMP
 );
 
+-- alter table loan_schema.paymentschedules
+--     owner to arizal;
+
 create table loan_schema.payments
 (
     payment_id     serial
@@ -68,9 +71,15 @@ create table loan_schema.payments
     week_number    integer                                                       not null
         constraint chk_week_number_positive
             check (week_number > 0),
-    status         varchar(20)              default 'pending'::character varying not null
+    status         varchar(20)              default 'pending'::character varying not null,
+    created_at     timestamp with time zone default CURRENT_TIMESTAMP,
+    updated_at     timestamp with time zone default CURRENT_TIMESTAMP,
+    constraint unique_loan_week
+        unique (loan_id, week_number)
 );
 
+-- alter table loan_schema.payments
+--     owner to arizal;
 
 create table loan_schema.auditlog
 (
@@ -85,6 +94,8 @@ create table loan_schema.auditlog
     modified_at timestamp with time zone default CURRENT_TIMESTAMP
 );
 
+-- alter table loan_schema.auditlog
+--     owner to arizal;
 
 create function loan_schema.update_updated_at_column() returns trigger
     language plpgsql
@@ -175,6 +186,10 @@ create trigger payments_audit_trigger
                     on loan_schema.payments
                         for each row
                         execute procedure loan_schema.log_audit_changes();
+
+
+
+
 
 
 -- Index, create index when necessary

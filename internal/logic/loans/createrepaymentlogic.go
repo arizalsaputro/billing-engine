@@ -3,6 +3,7 @@ package loans
 import (
 	"context"
 	"github.com/arizalsaputro/billing-engine/internal/model"
+	"github.com/shopspring/decimal"
 	"net/http"
 	"time"
 
@@ -27,7 +28,8 @@ func NewCreateRepaymentLogic(ctx context.Context, svcCtx *svc.ServiceContext) *C
 }
 
 func (l *CreateRepaymentLogic) CreateRepayment(req *types.CreateRepaymentReq) (resp *types.CreateRepaymentResp, err error) {
-	if req.PaymentAmount <= 0 {
+	paymentAmount := decimal.NewFromFloat(req.PaymentAmount)
+	if paymentAmount.IsNegative() || paymentAmount.IsZero() {
 		return nil, model.ErrInvalidPaymentAmount
 	}
 
@@ -46,7 +48,7 @@ func (l *CreateRepaymentLogic) CreateRepayment(req *types.CreateRepaymentReq) (r
 		return nil, model.ErrLoanAlreadyPaid
 	}
 
-	if req.PaymentAmount > loan.OutstandingBalance.IntPart() {
+	if paymentAmount.GreaterThan(loan.OutstandingBalance) {
 		return nil, model.ErrPaymentAmountMoreThanOutstanding
 	}
 
@@ -61,20 +63,21 @@ func (l *CreateRepaymentLogic) CreateRepayment(req *types.CreateRepaymentReq) (r
 		return nil, model.ErrNoPaymentDueDate
 	}
 
-	var totalMissedPayment int64
+	var totalMissedPayment decimal.Decimal
 	var repaymentAttempts []model.Payment
 	for _, schedule := range schedules {
-		totalMissedPayment += schedule.DueAmount.IntPart()
+		totalMissedPayment = totalMissedPayment.Add(schedule.DueAmount)
+		totalMissedPayment = totalMissedPayment.Add(schedule.LateFeeAmount)
 		repaymentAttempts = append(repaymentAttempts, model.Payment{
 			LoanID:        schedule.LoanID,
-			PaymentAmount: schedule.DueAmount,
+			PaymentAmount: schedule.DueAmount.Add(schedule.LateFeeAmount),
 			PaymentDate:   time.Now().UTC(),
 			WeekNumber:    schedule.WeekNumber,
 			Status:        model.StatusPaymentPending,
 		})
 	}
 	// step 2.2: validate payment amount with missed payment
-	if req.PaymentAmount != totalMissedPayment {
+	if !paymentAmount.Equal(totalMissedPayment) {
 		return nil, model.ErrPaymentAmountNotMatchWithUnpaidWeeklyInstallment
 	}
 

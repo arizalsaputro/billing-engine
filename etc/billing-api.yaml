@@ -37,7 +37,7 @@ Mode: dev
 
 SettingGracePeriodDay: 3
 SettingInterestPerAnnum: 10
-SettingLateFeePercentage: 0
+SettingLateFeePercentage: 2
 
 DataSource: "postgres://localhost:5432/loan_management?sslmode=disable"
 #DataSource: "postgresql://postgres:[YOUR-PASSWORD]@db.thmkxeurtudwqtroineg.supabase.co:5432/postgres"

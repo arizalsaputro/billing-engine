@@ -2,6 +2,7 @@ package consumer
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/arizalsaputro/billing-engine/internal/svc"
 	"github.com/arizalsaputro/billing-engine/internal/types"
@@ -24,7 +25,13 @@ func NewConsumeLateFeeLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Co
 }
 
 func (l *ConsumeLateFeeLogic) ConsumeLateFee(req *types.ConsumeLateFeeReq) (resp *types.ConsumeLateFeeResp, err error) {
-	// todo: add your logic here and delete this line
+	err = l.svcCtx.LoanModel.ApplyLateFees(l.ctx, req.LoanID)
+	if err != nil {
+		return nil, err
+	}
+	resp = &types.ConsumeLateFeeResp{}
+	resp.Msg = "success"
+	resp.Code = http.StatusOK
 
-	return
+	return resp, nil
 }

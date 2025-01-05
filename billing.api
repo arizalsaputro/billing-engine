@@ -29,17 +29,17 @@ type (
 		LoanID             int64 `json:"loanId"`
 		OutstandingBalance int64 `json:"outstandingBalance"`
 	}
-	GetLoanDelinquencygReq {
+	GetLoanDelinquencyReq {
 		LoanID int64 `path:"loanId"`
 	}
-	GetLoanDelinquencygResp {
+	GetLoanDelinquencyResp {
 		Base
 		LoanID       int64 `json:"loanId"`
 		IsDelinquent bool  `json:"isDelinquent"`
 	}
 	CreateRepaymentReq {
-		LoanID        int64 `path:"loanId"`
-		PaymentAmount int64 `json:"paymentAmount"`
+		LoanID        int64   `path:"loanId"`
+		PaymentAmount float64 `json:"paymentAmount"`
 	}
 	DataCreateRepayment {
 		PaymentId int64 `json:"paymentId"`
@@ -87,7 +87,7 @@ type (
 // simulate consumer service, suppose to create new service that consume kafka, but for simplicity just use API
 type (
 	ConsumeLateFeeReq {
-		ScheduleID int64 `json:"scheduleId"`
+		LoanID int64 `json:"loanId"`
 	}
 	ConsumeLateFeeResp {
 		Base
@@ -125,7 +125,7 @@ service billing-api {
 	get /billing/outstanding/:loanId (GetLoanOutstandingReq) returns (GetLoanOutStandingResp)
 
 	@handler GetLoanDelinquencyHandler
-	get /billing/delinquency/:loanId (GetLoanDelinquencygReq) returns (GetLoanDelinquencygResp)
+	get /billing/delinquency/:loanId (GetLoanDelinquencyReq) returns (GetLoanDelinquencyResp)
 
 	@handler CreateRepaymentHandler
 	post /billing/pay/:loanId (CreateRepaymentReq) returns (CreateRepaymentResp)

@@ -24,7 +24,7 @@ func NewGetLoanDelinquencyLogic(ctx context.Context, svcCtx *svc.ServiceContext)
 	}
 }
 
-func (l *GetLoanDelinquencyLogic) GetLoanDelinquency(req *types.GetLoanDelinquencygReq) (resp *types.GetLoanDelinquencygResp, err error) {
+func (l *GetLoanDelinquencyLogic) GetLoanDelinquency(req *types.GetLoanDelinquencyReq) (resp *types.GetLoanDelinquencyResp, err error) {
 	if req.LoanID <= 0 {
 		return nil, model.ErrNotFound
 	}
@@ -33,7 +33,7 @@ func (l *GetLoanDelinquencyLogic) GetLoanDelinquency(req *types.GetLoanDelinquen
 	if err != nil {
 		return nil, err
 	}
-	resp = &types.GetLoanDelinquencygResp{
+	resp = &types.GetLoanDelinquencyResp{
 		Base: types.Base{
 			Code: 200,
 			Msg:  "ok",
