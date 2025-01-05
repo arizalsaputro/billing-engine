@@ -103,7 +103,7 @@ type (
 	}
 	ConsumeRepaymentResp {
 		Base
-		LoanID int64
+		LoanID int64 `json:"loanId"`
 	}
 	ConsumeCheckDelinquencyReq {
 		LoanID int64 `json:"loanId"`

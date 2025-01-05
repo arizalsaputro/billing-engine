@@ -163,11 +163,15 @@
             "in": "query",
             "required": true,
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "default": "1000"
           }
         ],
         "tags": [
           "cron"
+        ],
+        "consumes": [
+          "multipart/form-data"
         ]
       }
     },
@@ -188,11 +192,15 @@
             "in": "query",
             "required": true,
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "default": "1000"
           }
         ],
         "tags": [
           "cron"
+        ],
+        "consumes": [
+          "multipart/form-data"
         ]
       }
     },
@@ -324,7 +332,7 @@
       "properties": {
         "loanId": {
           "type": "integer",
-          "format": "int32"
+          "format": "int64"
         }
       },
       "title": "ConsumeCheckDelinquencyReq",
@@ -350,7 +358,7 @@
       "properties": {
         "loanId": {
           "type": "integer",
-          "format": "int32"
+          "format": "int64"
         }
       },
       "title": "ConsumeDelinquencyReq",
@@ -376,7 +384,7 @@
       "properties": {
         "scheduleId": {
           "type": "integer",
-          "format": "int32"
+          "format": "int64"
         }
       },
       "title": "ConsumeLateFeeReq",
@@ -402,7 +410,7 @@
       "properties": {
         "paymentId": {
           "type": "integer",
-          "format": "int32"
+          "format": "int64"
         }
       },
       "title": "ConsumeRepaymentReq",
@@ -419,20 +427,27 @@
         },
         "msg": {
           "type": "string"
+        },
+        "loanId": {
+          "type": "integer",
+          "format": "int64"
         }
       },
-      "title": "ConsumeRepaymentResp"
+      "title": "ConsumeRepaymentResp",
+      "required": [
+        "loanId"
+      ]
     },
     "CreateLoanReq": {
       "type": "object",
       "properties": {
         "principalAmount": {
           "type": "integer",
-          "format": "int32"
+          "format": "int64"
         },
         "termWeeks": {
           "type": "integer",
-          "format": "int32"
+          "format": "int64"
         }
       },
       "title": "CreateLoanReq",
@@ -453,7 +468,7 @@
         },
         "loanId": {
           "type": "integer",
-          "format": "int32"
+          "format": "int64"
         }
       },
       "title": "CreateLoanResp",
@@ -466,7 +481,7 @@
       "properties": {
         "paymentAmount": {
           "type": "integer",
-          "format": "int32"
+          "format": "int64"
         }
       },
       "title": "CreateRepaymentReq",
@@ -484,14 +499,16 @@
         "msg": {
           "type": "string"
         },
-        "paymentId": {
-          "type": "integer",
-          "format": "int32"
+        "paymentIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DataCreateRepayment"
+          }
         }
       },
       "title": "CreateRepaymentResp",
       "required": [
-        "paymentId"
+        "paymentIds"
       ]
     },
     "CronDelinquencyReq": {
@@ -499,7 +516,8 @@
       "properties": {
         "queryLimit": {
           "type": "integer",
-          "format": "int32"
+          "format": "int32",
+          "default": "1000"
         }
       },
       "title": "CronDelinquencyReq",
@@ -534,7 +552,8 @@
       "properties": {
         "queryLimit": {
           "type": "integer",
-          "format": "int32"
+          "format": "int32",
+          "default": "1000"
         }
       },
       "title": "CronLateFeeReq",
@@ -564,12 +583,25 @@
         "data"
       ]
     },
+    "DataCreateRepayment": {
+      "type": "object",
+      "properties": {
+        "paymentId": {
+          "type": "integer",
+          "format": "int64"
+        }
+      },
+      "title": "DataCreateRepayment",
+      "required": [
+        "paymentId"
+      ]
+    },
     "DataDelinquency": {
       "type": "object",
       "properties": {
         "loanId": {
           "type": "integer",
-          "format": "int32"
+          "format": "int64"
         }
       },
       "title": "DataDelinquency",
@@ -580,23 +612,14 @@
     "DataLoanScheduleLate": {
       "type": "object",
       "properties": {
-        "scheduleId": {
+        "loanId": {
           "type": "integer",
-          "format": "int32"
-        },
-        "dueAmount": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "gracePeriodEnd": {
-          "type": "string"
+          "format": "int64"
         }
       },
       "title": "DataLoanScheduleLate",
       "required": [
-        "scheduleId",
-        "dueAmount",
-        "gracePeriodEnd"
+        "loanId"
       ]
     },
     "GetLoanDelinquencygReq": {
@@ -615,10 +638,11 @@
         },
         "loanId": {
           "type": "integer",
-          "format": "int32"
+          "format": "int64"
         },
         "isDelinquent": {
-          "type": "boolean"
+          "type": "boolean",
+          "format": "boolean"
         }
       },
       "title": "GetLoanDelinquencygResp",
@@ -639,11 +663,11 @@
         },
         "loanId": {
           "type": "integer",
-          "format": "int32"
+          "format": "int64"
         },
         "outstandingBalance": {
           "type": "integer",
-          "format": "int32"
+          "format": "int64"
         }
       },
       "title": "GetLoanOutStandingResp",
@@ -672,11 +696,11 @@
         },
         "paymentId": {
           "type": "integer",
-          "format": "int32"
+          "format": "int64"
         },
         "paymentAmount": {
           "type": "integer",
-          "format": "int32"
+          "format": "int64"
         },
         "paymentDate": {
           "type": "string"
