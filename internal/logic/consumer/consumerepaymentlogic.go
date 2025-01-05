@@ -2,7 +2,6 @@ package consumer
 
 import (
 	"context"
-
 	"github.com/arizalsaputro/billing-engine/internal/svc"
 	"github.com/arizalsaputro/billing-engine/internal/types"
 
@@ -24,7 +23,17 @@ func NewConsumeRepaymentLogic(ctx context.Context, svcCtx *svc.ServiceContext) *
 }
 
 func (l *ConsumeRepaymentLogic) ConsumeRepayment(req *types.ConsumeRepaymentReq) (resp *types.ConsumeRepaymentResp, err error) {
-	// todo: add your logic here and delete this line
+	err = l.svcCtx.LoanModel.ProcessRepayment(l.ctx, req.PaymentID)
+	if err != nil {
+		return nil, err
+	}
 
-	return
+	resp = &types.ConsumeRepaymentResp{
+		Base: types.Base{
+			Msg:  "done",
+			Code: 200,
+		},
+	}
+
+	return resp, nil
 }

@@ -41,9 +41,12 @@ type (
 		LoanID        int64 `path:"loanId"`
 		PaymentAmount int64 `json:"paymentAmount"`
 	}
+	DataCreateRepayment {
+		PaymentId int64 `json:"paymentId"`
+	}
 	CreateRepaymentResp {
 		Base
-		PaymentID int64 `json:"paymentId"`
+		PaymentIDs []*DataCreateRepayment `json:"paymentIds"`
 	}
 	GetRepaymentReq {
 		PaymentID int64 `path:"paymentId"`

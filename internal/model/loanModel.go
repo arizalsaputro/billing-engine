@@ -3,6 +3,7 @@ package model
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"github.com/shopspring/decimal"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
@@ -15,6 +16,9 @@ type (
 		CreateLoan(ctx context.Context, loan *Loans, schedules []*PaymentSchedule) (int64, error)
 		GetLoanByID(ctx context.Context, loanID int64) (*Loans, error)
 		GetPaymentByPaymentID(ctx context.Context, paymentID int64) (*Payment, error)
+		GetRepaymentSchedules(ctx context.Context, loanID int64) ([]PaymentSchedule, error)
+		UpsertPaymentWithID(ctx context.Context, payment Payment) (int64, error)
+		ProcessRepayment(ctx context.Context, paymentID int64) error
 	}
 
 	Loans struct {
@@ -142,4 +146,117 @@ func (m *loansModel) GetPaymentByPaymentID(ctx context.Context, paymentID int64)
 	}
 
 	return &payment, nil
+}
+
+func (m *loansModel) GetRepaymentSchedules(ctx context.Context, loanID int64) ([]PaymentSchedule, error) {
+	var schedules []PaymentSchedule
+	query := `
+		SELECT schedule_id, loan_id, week_number, due_amount, due_date, paid, payment_date,
+		       late_fee_applied, late_fee_amount, grace_period_days, grace_period_end,
+		       created_at, updated_at
+		FROM loan_schema.paymentschedules
+		WHERE loan_id = $1 AND due_date <= CURRENT_DATE AND paid = FALSE
+		ORDER BY week_number ASC
+	`
+	err := m.conn.QueryRowsCtx(ctx, &schedules, query, loanID)
+	if err != nil {
+		return nil, err
+	}
+
+	return schedules, nil
+}
+
+func (m *loansModel) UpsertPaymentWithID(ctx context.Context, payment Payment) (int64, error) {
+	var paymentID int64
+	query := `
+		INSERT INTO loan_schema.payments (loan_id, week_number, payment_amount, status)
+		VALUES ($1, $2, $3, $4)
+		ON CONFLICT (loan_id, week_number)
+		DO NOTHING
+		RETURNING payment_id;
+	`
+
+	err := m.conn.QueryRowCtx(ctx, &paymentID,
+		query, payment.LoanID, payment.WeekNumber, payment.PaymentAmount.StringFixed(2), payment.PaymentDate, payment.Status)
+	if err != nil {
+		return 0, err
+	}
+
+	// If no row was inserted and no `payment_id` is returned, fetch the existing `payment_id`
+	if paymentID == 0 {
+		existingQuery := `
+			SELECT payment_id
+			FROM loan_schema.payments
+			WHERE loan_id = $1 AND week_number = $2
+		`
+		err = m.conn.QueryRowCtx(ctx, &paymentID, existingQuery, payment.LoanID, payment.WeekNumber)
+		if err != nil {
+			return 0, err
+		}
+	}
+
+	return paymentID, nil
+}
+
+func (m *loansModel) ProcessRepayment(ctx context.Context, paymentID int64) error {
+	// Begin Transaction
+	err := m.conn.TransactCtx(ctx, func(ctx context.Context, session sqlx.Session) error {
+		// Step 1. Select and Lock the table payment
+		var payment Payment
+		query := `
+			SELECT loan_id, payment_amount, status, week_number
+			FROM loan_schema.payments
+			WHERE payment_id = $1
+			FOR UPDATE
+		`
+		err := m.conn.QueryRowCtx(ctx, &payment, query, paymentID)
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return ErrPaymentNotFound
+			}
+			return fmt.Errorf("failed to fetch payment: %w", err)
+		}
+
+		// Check idempotency
+		if payment.Status != StatusPaymentPending {
+			return nil // Already processed or in a non-pending state, exit early
+		}
+
+		// Step 2: Update Repayment Schedule
+		updateScheduleQuery := `
+			UPDATE loan_schema.paymentschedules
+			SET paid = TRUE, payment_date = CURRENT_DATE
+			WHERE loan_id = $1 AND week_number = $2 AND paid = FALSE
+		`
+		_, err = m.conn.ExecCtx(ctx, updateScheduleQuery, payment.LoanID, payment.WeekNumber)
+		if err != nil {
+			return fmt.Errorf("failed to update repayment schedule: %w", err)
+		}
+
+		// Step 3: Update Loan Outstanding Balance; atomic update
+		updateLoanQuery := `
+			UPDATE loan_schema.loans
+			SET outstanding_balance = outstanding_balance - $1
+			WHERE loan_id = $2
+		`
+		_, err = m.conn.ExecCtx(ctx, updateLoanQuery, payment.PaymentAmount.StringFixed(2), payment.LoanID)
+		if err != nil {
+			return fmt.Errorf("failed to update loan balance: %w", err)
+		}
+
+		// Step 4: Mark Payment as Success
+		updatePaymentQuery := `
+			UPDATE loan_schema.payments
+			SET status = 'success'
+			WHERE payment_id = $1
+		`
+		_, err = m.conn.ExecCtx(ctx, updatePaymentQuery, paymentID)
+		if err != nil {
+			return fmt.Errorf("failed to update payment status: %w", err)
+		}
+
+		return nil
+	})
+
+	return err
 }

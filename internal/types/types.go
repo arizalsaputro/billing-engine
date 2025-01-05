@@ -57,7 +57,7 @@ type CreateRepaymentReq struct {
 
 type CreateRepaymentResp struct {
 	Base
-	PaymentID int64 `json:"paymentId"`
+	PaymentIDs []*DataCreateRepayment `json:"paymentIds"`
 }
 
 type CronDelinquencyReq struct {
@@ -76,6 +76,10 @@ type CronLateFeeReq struct {
 type CronLateFeeResp struct {
 	Base
 	Data []*DataLoanScheduleLate `json:"data"`
+}
+
+type DataCreateRepayment struct {
+	PaymentId int64 `json:"paymentId"`
 }
 
 type DataDelinquency struct {

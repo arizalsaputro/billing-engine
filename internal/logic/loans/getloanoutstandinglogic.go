@@ -2,6 +2,7 @@ package loans
 
 import (
 	"context"
+	"github.com/arizalsaputro/billing-engine/internal/model"
 
 	"github.com/arizalsaputro/billing-engine/internal/svc"
 	"github.com/arizalsaputro/billing-engine/internal/types"
@@ -24,6 +25,10 @@ func NewGetLoanOutstandingLogic(ctx context.Context, svcCtx *svc.ServiceContext)
 }
 
 func (l *GetLoanOutstandingLogic) GetLoanOutstanding(req *types.GetLoanOutstandingReq) (resp *types.GetLoanOutStandingResp, err error) {
+	if req.LoanID <= 0 {
+		return nil, model.ErrNotFound
+	}
+
 	loan, err := l.svcCtx.LoanModel.GetLoanByID(l.ctx, req.LoanID)
 	if err != nil {
 		return nil, err
