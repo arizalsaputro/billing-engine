@@ -9,7 +9,7 @@ type Base struct {
 }
 
 type ConsumeCheckDelinquencyReq struct {
-	LoanID int `json:"loanId"`
+	LoanID int64 `json:"loanId"`
 }
 
 type ConsumeCheckDelinquencyResp struct {
@@ -17,7 +17,7 @@ type ConsumeCheckDelinquencyResp struct {
 }
 
 type ConsumeDelinquencyReq struct {
-	LoanID int `json:"loanId"`
+	LoanID int64 `json:"loanId"`
 }
 
 type ConsumeDelinquencyResp struct {
@@ -25,7 +25,7 @@ type ConsumeDelinquencyResp struct {
 }
 
 type ConsumeLateFeeReq struct {
-	ScheduleID int `json:"scheduleId"`
+	ScheduleID int64 `json:"scheduleId"`
 }
 
 type ConsumeLateFeeResp struct {
@@ -33,7 +33,7 @@ type ConsumeLateFeeResp struct {
 }
 
 type ConsumeRepaymentReq struct {
-	PaymentID int `json:"paymentId"`
+	PaymentID int64 `json:"paymentId"`
 }
 
 type ConsumeRepaymentResp struct {
@@ -41,23 +41,23 @@ type ConsumeRepaymentResp struct {
 }
 
 type CreateLoanReq struct {
-	PrincipalAmount int `json:"principalAmount"`
-	TermWeeks       int `json:"termWeeks"`
+	PrincipalAmount int64 `json:"principalAmount"`
+	TermWeeks       int64 `json:"termWeeks"`
 }
 
 type CreateLoanResp struct {
 	Base
-	LoanID int `json:"loanId"`
+	LoanID int64 `json:"loanId"`
 }
 
 type CreateRepaymentReq struct {
-	LoanID        int `path:"loanId"`
-	PaymentAmount int `json:"paymentAmount"`
+	LoanID        int64 `path:"loanId"`
+	PaymentAmount int64 `json:"paymentAmount"`
 }
 
 type CreateRepaymentResp struct {
 	Base
-	PaymentID int `json:"paymentId"`
+	PaymentID int64 `json:"paymentId"`
 }
 
 type CronDelinquencyReq struct {
@@ -79,7 +79,7 @@ type CronLateFeeResp struct {
 }
 
 type DataDelinquency struct {
-	LoanID int `json:"loanId"`
+	LoanID int64 `json:"loanId"`
 }
 
 type DataLoanScheduleLate struct {
@@ -89,33 +89,33 @@ type DataLoanScheduleLate struct {
 }
 
 type GetLoanDelinquencygReq struct {
-	LoanID int `path:"loanId"`
+	LoanID int64 `path:"loanId"`
 }
 
 type GetLoanDelinquencygResp struct {
 	Base
-	LoanID       int  `json:"loanId"`
-	IsDelinquent bool `json:"isDelinquent"`
+	LoanID       int64 `json:"loanId"`
+	IsDelinquent bool  `json:"isDelinquent"`
 }
 
 type GetLoanOutStandingResp struct {
 	Base
-	LoanID             int `json:"loanId"`
-	OutstandingBalance int `json:"outstandingBalance"`
+	LoanID             int64 `json:"loanId"`
+	OutstandingBalance int64 `json:"outstandingBalance"`
 }
 
 type GetLoanOutstandingReq struct {
-	LoanID int `path:"loanId"`
+	LoanID int64 `path:"loanId"`
 }
 
 type GetRepaymentReq struct {
-	PaymentID int `path:"paymentId"`
+	PaymentID int64 `path:"paymentId"`
 }
 
 type GetRepaymentResp struct {
 	Base
-	PaymentID     int    `json:"paymentId"`
-	PaymentAmount int    `json:"paymentAmount"`
+	PaymentID     int64  `json:"paymentId"`
+	PaymentAmount int64  `json:"paymentAmount"`
 	PaymentDate   string `json:"paymentDate"`
 	Status        string `json:"status"`
 }

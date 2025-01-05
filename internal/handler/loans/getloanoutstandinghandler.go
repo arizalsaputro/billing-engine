@@ -15,7 +15,10 @@ func GetLoanOutstandingHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req types.GetLoanOutstandingReq
 		if err := httpx.Parse(r, &req); err != nil {
-			httpx.ErrorCtx(r.Context(), w, err)
+			httpx.WriteJsonCtx(r.Context(), w, http.StatusBadRequest, &types.Base{
+				Code: http.StatusBadRequest,
+				Msg:  err.Error(),
+			})
 			return
 		}
 

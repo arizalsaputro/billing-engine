@@ -24,7 +24,17 @@ func NewGetLoanDelinquencyLogic(ctx context.Context, svcCtx *svc.ServiceContext)
 }
 
 func (l *GetLoanDelinquencyLogic) GetLoanDelinquency(req *types.GetLoanDelinquencygReq) (resp *types.GetLoanDelinquencygResp, err error) {
-	// todo: add your logic here and delete this line
-
+	loan, err := l.svcCtx.LoanModel.GetLoanByID(l.ctx, req.LoanID)
+	if err != nil {
+		return nil, err
+	}
+	resp = &types.GetLoanDelinquencygResp{
+		Base: types.Base{
+			Code: 200,
+			Msg:  "ok",
+		},
+		LoanID:       loan.LoanId,
+		IsDelinquent: loan.Delinquent,
+	}
 	return
 }

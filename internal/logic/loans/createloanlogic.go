@@ -59,7 +59,7 @@ func (l *CreateLoanLogic) CreateLoan(req *types.CreateLoanReq) (resp *types.Crea
 	// Step 3: Prepare Loan Schedule
 	var schedules []*model.PaymentSchedule
 	startDate := time.Now()
-	for i := 1; i <= req.TermWeeks; i++ {
+	for i := 1; i <= int(req.TermWeeks); i++ {
 		dueDate := startDate.AddDate(0, 0, 7*i)
 		schedules = append(schedules, &model.PaymentSchedule{
 			WeekNumber:      int64(i),
@@ -79,7 +79,7 @@ func (l *CreateLoanLogic) CreateLoan(req *types.CreateLoanReq) (resp *types.Crea
 			Code: http.StatusOK,
 			Msg:  "success",
 		},
-		LoanID: int(newLoanID),
+		LoanID: newLoanID,
 	}
 
 	return resp, nil

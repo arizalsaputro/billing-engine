@@ -34,8 +34,8 @@ type (
 	}
 	GetLoanDelinquencygResp {
 		Base
-		LoanID       int64  `json:"loanId"`
-		IsDelinquent bool `json:"isDelinquent"`
+		LoanID       int64 `json:"loanId"`
+		IsDelinquent bool  `json:"isDelinquent"`
 	}
 	CreateRepaymentReq {
 		LoanID        int64 `path:"loanId"`
@@ -50,8 +50,8 @@ type (
 	}
 	GetRepaymentResp {
 		Base
-		PaymentID     int64    `json:"paymentId"`
-		PaymentAmount int64    `json:"paymentAmount"`
+		PaymentID     int64  `json:"paymentId"`
+		PaymentAmount int64  `json:"paymentAmount"`
 		PaymentDate   string `json:"paymentDate"`
 		Status        string `json:"status"`
 	}

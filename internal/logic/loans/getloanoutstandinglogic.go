@@ -24,13 +24,17 @@ func NewGetLoanOutstandingLogic(ctx context.Context, svcCtx *svc.ServiceContext)
 }
 
 func (l *GetLoanOutstandingLogic) GetLoanOutstanding(req *types.GetLoanOutstandingReq) (resp *types.GetLoanOutStandingResp, err error) {
-	loan, err := l.svcCtx.LoanModel.GetLoanByID(l.ctx, int64(req.LoanID))
+	loan, err := l.svcCtx.LoanModel.GetLoanByID(l.ctx, req.LoanID)
 	if err != nil {
 		return nil, err
 	}
 	resp = &types.GetLoanOutStandingResp{
-		LoanID: int(loan.LoanId),
-		OutstandingBalance: ,
+		Base: types.Base{
+			Code: 200,
+			Msg:  "ok",
+		},
+		LoanID:             loan.LoanId,
+		OutstandingBalance: loan.OutstandingBalance.IntPart(),
 	}
 
 	return

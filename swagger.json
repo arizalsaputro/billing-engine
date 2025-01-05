@@ -3,7 +3,7 @@
   "info": {
     "title": "billing API",
     "description": "simple billing API",
-    "version": ""
+    "version": "1.0.0"
   },
   "host": "127.0.0.1:8888",
   "schemes": [
@@ -168,9 +168,6 @@
         ],
         "tags": [
           "cron"
-        ],
-        "consumes": [
-          "multipart/form-data"
         ]
       }
     },
@@ -196,9 +193,6 @@
         ],
         "tags": [
           "cron"
-        ],
-        "consumes": [
-          "multipart/form-data"
         ]
       }
     },
@@ -624,8 +618,7 @@
           "format": "int32"
         },
         "isDelinquent": {
-          "type": "boolean",
-          "format": "boolean"
+          "type": "boolean"
         }
       },
       "title": "GetLoanDelinquencygResp",
