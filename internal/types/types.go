@@ -71,7 +71,7 @@ type CronDelinquencyResp struct {
 }
 
 type CronLateFeeReq struct {
-	QueryLimit int `form:"queryLimit"`
+	QueryLimit int `form:"queryLimit,default=1000"`
 }
 
 type CronLateFeeResp struct {
@@ -88,9 +88,7 @@ type DataDelinquency struct {
 }
 
 type DataLoanScheduleLate struct {
-	ScheduleID     int    `json:"scheduleId"`
-	DueAmount      int    `json:"dueAmount"`
-	GracePeriodEnd string `json:"gracePeriodEnd"`
+	LoanID int64 `json:"loanId"`
 }
 
 type GetLoanDelinquencygReq struct {

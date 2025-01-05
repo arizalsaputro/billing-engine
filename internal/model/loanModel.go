@@ -22,6 +22,8 @@ type (
 		GetDelinquentLoans(ctx context.Context, limit int) ([]Loans, error)
 		RecheckLoanDelinquency(ctx context.Context, loanID int64) (int64, error)
 		UpdateLoanDelinquency(ctx context.Context, loanID int64, isDelinquent bool) error
+		GetLateRepaymentSchedules(ctx context.Context, limit int) ([]PaymentSchedule, error)
+		ApplyLateFees(ctx context.Context, loanID int64) error
 	}
 
 	Loans struct {
@@ -320,4 +322,69 @@ func (m *loansModel) UpdateLoanDelinquency(ctx context.Context, loanID int64, is
 	}
 
 	return nil
+}
+
+func (m *loansModel) GetLateRepaymentSchedules(ctx context.Context, limit int) ([]PaymentSchedule, error) {
+	var schedules []PaymentSchedule
+
+	query := `
+		SELECT DISTINCT loan_id
+		FROM loan_schema.paymentschedules
+		WHERE grace_period_end < CURRENT_DATE 
+		  AND paid = FALSE 
+		  AND late_fee_applied = FALSE
+		ORDER BY loan_id ASC
+		LIMIT $1
+	`
+
+	err := m.conn.QueryRowsCtx(ctx, &schedules, query, limit)
+	if err != nil {
+		return nil, err
+	}
+
+	return schedules, nil
+}
+
+func (m *loansModel) ApplyLateFees(ctx context.Context, loanID int64) error {
+	err := m.conn.TransactCtx(ctx, func(ctx context.Context, session sqlx.Session) error {
+		// Step 1: Update repayment schedules and fetch late fees
+		var lateFees []decimal.Decimal
+
+		updateQuery := `
+		UPDATE loan_schema.paymentschedules
+		SET late_fee_applied = TRUE, 
+		    late_fee_amount = GREATEST(due_amount * (SELECT late_fee_percentage / 100 FROM loan_schema.loans WHERE loan_id = $1), 0)
+		WHERE loan_id = $1 AND grace_period_end < CURRENT_DATE AND paid = FALSE AND late_fee_applied = FALSE
+		RETURNING late_fee_amount
+		`
+
+		err := session.QueryRowCtx(ctx, &lateFees, updateQuery, loanID)
+		if err != nil {
+			return fmt.Errorf("failed to apply late fees: %w", err)
+		}
+
+		var totalLateFees decimal.Decimal
+		for _, fee := range lateFees {
+			totalLateFees.Add(fee)
+		}
+
+		// If no late fees were applied, skip further updates
+		if totalLateFees.IsZero() {
+			return nil
+		}
+
+		// Step 2: Update loan outstanding balance
+		updateLoanQuery := `
+			UPDATE loan_schema.loans
+			SET outstanding_balance = outstanding_balance + $1
+			WHERE loan_id = $2
+		`
+		_, err = session.ExecCtx(ctx, updateLoanQuery, totalLateFees.StringFixed(2), loanID)
+		if err != nil {
+			return fmt.Errorf("failed to update loan outstanding balance: %w", err)
+		}
+
+		return nil
+	})
+	return err
 }

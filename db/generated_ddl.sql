@@ -189,3 +189,6 @@ create trigger payments_audit_trigger
 -- index for cron check delinquency
 CREATE INDEX idx_due_date_paid ON loan_schema.paymentschedules (due_date, paid);
 
+-- index for cron late fee checker
+CREATE INDEX idx_grace_period_end_paid ON loan_schema.paymentschedules (grace_period_end, paid, late_fee_applied);
+

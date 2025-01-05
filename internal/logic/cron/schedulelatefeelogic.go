@@ -24,7 +24,24 @@ func NewScheduleLateFeeLogic(ctx context.Context, svcCtx *svc.ServiceContext) *S
 }
 
 func (l *ScheduleLateFeeLogic) ScheduleLateFee(req *types.CronLateFeeReq) (resp *types.CronLateFeeResp, err error) {
-	// todo: add your logic here and delete this line
+	schedules, err := l.svcCtx.LoanModel.GetLateRepaymentSchedules(l.ctx, req.QueryLimit)
+	if err != nil {
+		return nil, err
+	}
 
-	return
+	resp = &types.CronLateFeeResp{
+		Data: make([]*types.DataLoanScheduleLate, 0),
+	}
+
+	for _, schedule := range schedules {
+		resp.Data = append(resp.Data, &types.DataLoanScheduleLate{
+			LoanID: schedule.LoanID,
+		})
+
+		// TODO: kalau dari design harusnya ini publish kafka
+		// demi simplicity sampai sini aja
+		// untuk simulate coba /v1/billing/consume/late
+	}
+
+	return resp, nil
 }
