@@ -211,7 +211,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/GetLoanDelinquencygResp"
+              "$ref": "#/definitions/GetLoanDelinquencyResp"
             }
           }
         },
@@ -305,6 +305,47 @@
         ],
         "tags": [
           "loans"
+        ]
+      }
+    },
+    "/v1/billing/schedule/{loanId}": {
+      "get": {
+        "operationId": "GetRepaymentSchedule",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/GetRepaymentScheduleResp"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "loanId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "loans"
+        ],
+        "consumes": [
+          "multipart/form-data"
         ]
       }
     }
@@ -480,8 +521,8 @@
       "type": "object",
       "properties": {
         "paymentAmount": {
-          "type": "integer",
-          "format": "int64"
+          "type": "number",
+          "format": "double"
         }
       },
       "title": "CreateRepaymentReq",
@@ -622,11 +663,11 @@
         "loanId"
       ]
     },
-    "GetLoanDelinquencygReq": {
+    "GetLoanDelinquencyReq": {
       "type": "object",
-      "title": "GetLoanDelinquencygReq"
+      "title": "GetLoanDelinquencyReq"
     },
-    "GetLoanDelinquencygResp": {
+    "GetLoanDelinquencyResp": {
       "type": "object",
       "properties": {
         "code": {
@@ -645,7 +686,7 @@
           "format": "boolean"
         }
       },
-      "title": "GetLoanDelinquencygResp",
+      "title": "GetLoanDelinquencyResp",
       "required": [
         "loanId",
         "isDelinquent"
@@ -715,6 +756,62 @@
         "paymentAmount",
         "paymentDate",
         "status"
+      ]
+    },
+    "GetRepaymentScheduleReq": {
+      "type": "object",
+      "properties": {
+        "limit": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "offset": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "GetRepaymentScheduleReq"
+    },
+    "GetRepaymentScheduleResp": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/RepaymentSchedule"
+          }
+        }
+      },
+      "title": "GetRepaymentScheduleResp",
+      "required": [
+        "data"
+      ]
+    },
+    "RepaymentSchedule": {
+      "type": "object",
+      "properties": {
+        "weekNumber": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "dueAmount": {
+          "type": "number",
+          "format": "double"
+        },
+        "dueDate": {
+          "type": "string"
+        },
+        "isPaid": {
+          "type": "boolean",
+          "format": "boolean"
+        }
+      },
+      "title": "RepaymentSchedule",
+      "required": [
+        "weekNumber",
+        "dueAmount",
+        "dueDate",
+        "isPaid"
       ]
     }
   },
