@@ -84,6 +84,11 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Path:    "/billing/pay/:paymentId",
 				Handler: loans.GetRepaymentHandler(serverCtx),
 			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/billing/schedule/:loanId",
+				Handler: loans.GetRepaymentScheduleHandler(serverCtx),
+			},
 		},
 		rest.WithPrefix("/v1"),
 	)

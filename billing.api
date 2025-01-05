@@ -58,6 +58,20 @@ type (
 		PaymentDate   string `json:"paymentDate"`
 		Status        string `json:"status"`
 	}
+	GetRepaymentScheduleReq {
+		LoanID int64 `path:"loanId"`
+		Limit  int   `form:"limit,optional"`
+		Offset int   `form:"offset,optional"`
+	}
+	RepaymentSchedule {
+		WeekNumber int     `json:"weekNumber"`
+		DueAmount  float64 `json:"dueAmount"`
+		DueDate    string  `json:"dueDate"`
+		IsPaid     bool    `json:"isPaid"`
+	}
+	GetRepaymentScheduleResp {
+		Data []*RepaymentSchedule `json:"data"`
+	}
 )
 
 // simulate cron service, suppose to create new service, but for simplicity just use this API
@@ -132,6 +146,9 @@ service billing-api {
 
 	@handler GetRepaymentHandler
 	get /billing/pay/:paymentId (GetRepaymentReq) returns (GetRepaymentResp)
+
+	@handler GetRepaymentSchedule
+	get /billing/schedule/:loanId (GetRepaymentScheduleReq) returns (GetRepaymentScheduleResp)
 }
 
 @server (

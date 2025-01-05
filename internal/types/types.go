@@ -122,3 +122,20 @@ type GetRepaymentResp struct {
 	PaymentDate   string `json:"paymentDate"`
 	Status        string `json:"status"`
 }
+
+type GetRepaymentScheduleReq struct {
+	LoanID int64 `path:"loanId"`
+	Limit  int   `form:"limit,optional"`
+	Offset int   `form:"offset,optional"`
+}
+
+type GetRepaymentScheduleResp struct {
+	Data []*RepaymentSchedule `json:"data"`
+}
+
+type RepaymentSchedule struct {
+	WeekNumber int     `json:"weekNumber"`
+	DueAmount  float64 `json:"dueAmount"`
+	DueDate    string  `json:"dueDate"`
+	IsPaid     bool    `json:"isPaid"`
+}
