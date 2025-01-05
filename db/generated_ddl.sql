@@ -7,7 +7,7 @@ create table loan_schema.loans
     principal_amount    numeric(15, 2)                          not null
         constraint chk_principal_amount_positive
             check (principal_amount > (0)::numeric),
-    interest_rate       numeric(5, 2)            default 0.1000 not null
+    interest_rate       numeric(5, 2)            default 10 not null
         constraint chk_interest_rate_positive
             check (interest_rate >= (0)::numeric),
     term_weeks          integer                                 not null

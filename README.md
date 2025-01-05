@@ -88,15 +88,20 @@ for more real time & scalable, we can use this approach
    - check folder /db
    - setup on your local env or using https://supabase.com/
    - update the database connection in config in /etc/billing-api.yaml
-3. **Tidy Up:**
+
+3. **Setup Config**:
+   - You can setup the Interest rate, grace period or late fee in `/etc/billing-api.yaml`
+   - For simplicity env store in that place
+     - ideally for config like this can be store in db
+4. **Tidy Up:**
      ```bash 
     go mod tidy 
     ```
-4. **Run Local:**
+5. **Run Local:**
     ```bash 
     go run billing.go -f etc/billing-api.yaml 
     ```
-5. **Check Api Docs:** 
+6. **Check Api Docs:** 
     - check swagger.json
     - or import swagger to postman
 

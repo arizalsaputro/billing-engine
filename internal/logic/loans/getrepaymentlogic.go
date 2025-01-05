@@ -24,7 +24,21 @@ func NewGetRepaymentLogic(ctx context.Context, svcCtx *svc.ServiceContext) *GetR
 }
 
 func (l *GetRepaymentLogic) GetRepayment(req *types.GetRepaymentReq) (resp *types.GetRepaymentResp, err error) {
-	// todo: add your logic here and delete this line
+	payment, err := l.svcCtx.LoanModel.GetPaymentByPaymentID(l.ctx, req.PaymentID)
+	if err != nil {
+		return nil, err
+	}
 
-	return
+	resp = &types.GetRepaymentResp{
+		Base: types.Base{
+			Code: 200,
+			Msg:  "ok",
+		},
+		PaymentID:     payment.PaymentID,
+		PaymentAmount: payment.PaymentAmount.IntPart(),
+		PaymentDate:   payment.PaymentDate.String(),
+		Status:        payment.Status,
+	}
+
+	return resp, nil
 }

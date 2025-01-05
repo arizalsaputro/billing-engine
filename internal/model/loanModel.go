@@ -14,6 +14,7 @@ type (
 	LoansModel interface {
 		CreateLoan(ctx context.Context, loan *Loans, schedules []*PaymentSchedule) (int64, error)
 		GetLoanByID(ctx context.Context, loanID int64) (*Loans, error)
+		GetPaymentByPaymentID(ctx context.Context, paymentID int64) (*Payment, error)
 	}
 
 	Loans struct {
@@ -44,6 +45,15 @@ type (
 		GracePeriodEnd  sql.NullTime    `db:"grace_period_end"`  // Generated always as (due_date + grace_period_days)
 		CreatedAt       time.Time       `db:"created_at"`        // Timestamp with default CURRENT_TIMESTAMP
 		UpdatedAt       time.Time       `db:"updated_at"`        // Timestamp with default CURRENT_TIMESTAMP
+	}
+
+	Payment struct {
+		PaymentID     int64           `db:"payment_id"`
+		LoanID        int64           `db:"loan_id"`
+		PaymentAmount decimal.Decimal `db:"payment_amount"`
+		PaymentDate   time.Time       `db:"payment_date"`
+		WeekNumber    int64           `db:"week_number"`
+		Status        string          `db:"status"`
 	}
 
 	loansModel struct {
@@ -117,4 +127,19 @@ func (m *loansModel) GetLoanByID(ctx context.Context, loanID int64) (*Loans, err
 	}
 
 	return &loan, nil
+}
+
+func (m *loansModel) GetPaymentByPaymentID(ctx context.Context, paymentID int64) (*Payment, error) {
+	var payment Payment
+	query := `
+		SELECT payment_id, loan_id, payment_amount, payment_date, week_number, status
+		FROM loan_schema.payments
+		WHERE payment_id = $1
+	`
+	err := m.conn.QueryRowCtx(ctx, &payment, query, paymentID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &payment, nil
 }
