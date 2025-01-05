@@ -24,7 +24,24 @@ func NewScheduleDelinquencyLogic(ctx context.Context, svcCtx *svc.ServiceContext
 }
 
 func (l *ScheduleDelinquencyLogic) ScheduleDelinquency(req *types.CronDelinquencyReq) (resp *types.CronDelinquencyResp, err error) {
-	// todo: add your logic here and delete this line
+	loans, err := l.svcCtx.LoanModel.GetDelinquentLoans(l.ctx, req.QueryLimit)
+	if err != nil {
+		return nil, err
+	}
 
-	return
+	// TODO:
+	// kalau dari system yang dibuat sih harusnya ini publish ke kafka ya, tapi biar simple
+	// buat simulate coba hit v1/billing/delinquency
+
+	resp = &types.CronDelinquencyResp{
+		Data: make([]*types.DataDelinquency, 0),
+	}
+
+	for _, loan := range loans {
+		resp.Data = append(resp.Data, &types.DataDelinquency{
+			LoanID: loan.LoanId,
+		})
+	}
+
+	return resp, nil
 }

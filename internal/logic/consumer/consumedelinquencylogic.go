@@ -2,6 +2,7 @@ package consumer
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/arizalsaputro/billing-engine/internal/svc"
 	"github.com/arizalsaputro/billing-engine/internal/types"
@@ -24,7 +25,14 @@ func NewConsumeDelinquencyLogic(ctx context.Context, svcCtx *svc.ServiceContext)
 }
 
 func (l *ConsumeDelinquencyLogic) ConsumeDelinquency(req *types.ConsumeDelinquencyReq) (resp *types.ConsumeDelinquencyResp, err error) {
-	// todo: add your logic here and delete this line
+	err = l.svcCtx.LoanModel.UpdateLoanDelinquency(l.ctx, req.LoanID, true)
+	if err != nil {
+		return nil, err
+	}
+	resp = &types.ConsumeDelinquencyResp{}
 
-	return
+	resp.Msg = "success"
+	resp.Code = http.StatusOK
+
+	return resp, nil
 }

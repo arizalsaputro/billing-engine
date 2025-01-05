@@ -62,7 +62,7 @@ type CreateRepaymentResp struct {
 }
 
 type CronDelinquencyReq struct {
-	QueryLimit int `form:"queryLimit"`
+	QueryLimit int `form:"queryLimit,default=1000"`
 }
 
 type CronDelinquencyResp struct {

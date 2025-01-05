@@ -185,3 +185,7 @@ create trigger payments_audit_trigger
 -- CREATE INDEX IF NOT EXISTS idx_paymentschedules_loan_id ON loan_schema.PaymentSchedules(loan_id);
 -- CREATE INDEX idx_due_date ON PaymentSchedules(due_date);
 -- CREATE INDEX idx_grace_period_end ON PaymentSchedules(grace_period_end);
+
+-- index for cron check delinquency
+CREATE INDEX idx_due_date_paid ON loan_schema.paymentschedules (due_date, paid);
+

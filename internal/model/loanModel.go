@@ -19,6 +19,9 @@ type (
 		GetRepaymentSchedules(ctx context.Context, loanID int64) ([]PaymentSchedule, error)
 		UpsertPaymentWithID(ctx context.Context, payment Payment) (int64, error)
 		ProcessRepayment(ctx context.Context, paymentID int64) (loanID int64, err error)
+		GetDelinquentLoans(ctx context.Context, limit int) ([]Loans, error)
+		RecheckLoanDelinquency(ctx context.Context, loanID int64) (int64, error)
+		UpdateLoanDelinquency(ctx context.Context, loanID int64, isDelinquent bool) error
 	}
 
 	Loans struct {
@@ -262,4 +265,59 @@ func (m *loansModel) ProcessRepayment(ctx context.Context, paymentID int64) (loa
 	})
 
 	return loanID, err
+}
+
+func (m *loansModel) GetDelinquentLoans(ctx context.Context, limit int) ([]Loans, error) {
+	var loans []Loans
+
+	query := `
+		SELECT loan_id
+		FROM loan_schema.paymentschedules
+		WHERE due_date < CURRENT_DATE AND paid = FALSE
+		GROUP BY loan_id
+		HAVING COUNT(*) >= 2
+		LIMIT $1
+	`
+
+	err := m.conn.QueryRowsCtx(ctx, &loans, query, limit)
+	if err != nil {
+		return nil, err
+	}
+
+	return loans, nil
+}
+
+func (m *loansModel) RecheckLoanDelinquency(ctx context.Context, loanID int64) (int64, error) {
+	// Step 1: Check for delinquency condition
+	var delinquentCount int64
+	query := `
+		SELECT COUNT(*)
+		FROM loan_schema.paymentschedules
+		WHERE loan_id = $1 AND due_date < CURRENT_DATE AND paid = FALSE
+	`
+
+	err := m.conn.QueryRowCtx(ctx, &delinquentCount, query, loanID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return delinquentCount, nil // No repayment schedules, loan is not delinquent
+		}
+		return delinquentCount, err
+	}
+
+	return delinquentCount, nil
+}
+
+func (m *loansModel) UpdateLoanDelinquency(ctx context.Context, loanID int64, isDelinquent bool) error {
+	updateQuery := `
+		UPDATE loan_schema.loans
+		SET delinquent = $1
+		WHERE loan_id = $2
+	`
+
+	_, err := m.conn.ExecCtx(ctx, updateQuery, isDelinquent, loanID)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

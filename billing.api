@@ -75,7 +75,7 @@ type (
 		Data []*DataLoanScheduleLate `json:"data"`
 	}
 	CronDelinquencyReq {
-		QueryLimit int `form:"queryLimit"`
+		QueryLimit int `form:"queryLimit,default=1000"`
 	}
 	DataDelinquency {
 		LoanID int64 `json:"loanId"`

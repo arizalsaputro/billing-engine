@@ -24,7 +24,22 @@ func NewConsumeCheckDelinquencyLogic(ctx context.Context, svcCtx *svc.ServiceCon
 }
 
 func (l *ConsumeCheckDelinquencyLogic) ConsumeCheckDelinquency(req *types.ConsumeCheckDelinquencyReq) (resp *types.ConsumeCheckDelinquencyResp, err error) {
-	// todo: add your logic here and delete this line
+	count, err := l.svcCtx.LoanModel.RecheckLoanDelinquency(l.ctx, req.LoanID)
+	if err != nil {
+		return nil, err
+	}
 
-	return
+	err = l.svcCtx.LoanModel.UpdateLoanDelinquency(l.ctx, req.LoanID, count >= 2)
+	if err != nil {
+		return nil, err
+	}
+
+	resp = &types.ConsumeCheckDelinquencyResp{
+		Base: types.Base{
+			Code: 200,
+			Msg:  "success",
+		},
+	}
+
+	return resp, nil
 }
