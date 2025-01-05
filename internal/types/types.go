@@ -38,6 +38,7 @@ type ConsumeRepaymentReq struct {
 
 type ConsumeRepaymentResp struct {
 	Base
+	LoanID int64
 }
 
 type CreateLoanReq struct {

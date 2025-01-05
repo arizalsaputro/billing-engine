@@ -18,7 +18,7 @@ type (
 		GetPaymentByPaymentID(ctx context.Context, paymentID int64) (*Payment, error)
 		GetRepaymentSchedules(ctx context.Context, loanID int64) ([]PaymentSchedule, error)
 		UpsertPaymentWithID(ctx context.Context, payment Payment) (int64, error)
-		ProcessRepayment(ctx context.Context, paymentID int64) error
+		ProcessRepayment(ctx context.Context, paymentID int64) (loanID int64, err error)
 	}
 
 	Loans struct {
@@ -198,9 +198,10 @@ func (m *loansModel) UpsertPaymentWithID(ctx context.Context, payment Payment) (
 	return paymentID, nil
 }
 
-func (m *loansModel) ProcessRepayment(ctx context.Context, paymentID int64) error {
+func (m *loansModel) ProcessRepayment(ctx context.Context, paymentID int64) (loanID int64, err error) {
 	// Begin Transaction
-	err := m.conn.TransactCtx(ctx, func(ctx context.Context, session sqlx.Session) error {
+	// rollback dan commit di wrapping di function ini
+	err = m.conn.TransactCtx(ctx, func(ctx context.Context, session sqlx.Session) error {
 		// Step 1. Select and Lock the table payment
 		var payment Payment
 		query := `
@@ -221,6 +222,8 @@ func (m *loansModel) ProcessRepayment(ctx context.Context, paymentID int64) erro
 		if payment.Status != StatusPaymentPending {
 			return nil // Already processed or in a non-pending state, exit early
 		}
+
+		loanID = payment.LoanID
 
 		// Step 2: Update Repayment Schedule
 		updateScheduleQuery := `
@@ -258,5 +261,5 @@ func (m *loansModel) ProcessRepayment(ctx context.Context, paymentID int64) erro
 		return nil
 	})
 
-	return err
+	return loanID, err
 }

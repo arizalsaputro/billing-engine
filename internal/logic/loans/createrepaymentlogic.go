@@ -100,6 +100,7 @@ func (l *CreateRepaymentLogic) CreateRepayment(req *types.CreateRepaymentReq) (r
 	// Step 4: publish kafka
 	// loop of resp.PaymentID the publish to kafka
 	// TODO: for simplicity of code this step will be doing by hit API
+	// try Hit /v1/billing/consume/pay using payment_id
 
 	return resp, nil
 }
